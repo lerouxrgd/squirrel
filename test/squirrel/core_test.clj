@@ -1,6 +1,5 @@
 (ns squirrel.core-test
   (:import
-   (org.apache.flink.api.common.functions.util ListCollector)
    (squirrel.core SplitLine))
   (:require
    [clojure.test :refer :all]

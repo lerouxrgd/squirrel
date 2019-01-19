@@ -1,3 +1,3 @@
 # squirrel
 
-Word count with Flink stream processing in Clojure.
+Flink word count example in Clojure.
