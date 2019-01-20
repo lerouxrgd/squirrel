@@ -1,35 +1,42 @@
 (ns squirrel.utils
   (:import
-   (java.util ArrayList)
+   (org.apache.flink.api.common.functions FlatMapFunction)
    (org.apache.flink.api.common.functions.util ListCollector)
    (org.apache.flink.api.java.tuple Tuple2)
    (org.apache.flink.streaming.api.datastream DataStreamSource)
    (org.apache.flink.streaming.api.environment StreamExecutionEnvironment)
    (org.apache.flink.streaming.api.functions.sink SinkFunction)
-   (squirrel.core SplitLine)))
+   (org.apache.flink.streaming.api.functions.source SourceFunction)))
 
-(def ^:dynamic *sink* (ArrayList.))
+(deftype WaitingSource [wait-ms inputs]
+  SourceFunction
+  (run [_ ctx]
+    (doseq [i inputs]
+      (.collect ctx i))
+    (Thread/sleep wait-ms)))
+
+(def ^:dynamic *sink*)
 
 (deftype DynSink []
   SinkFunction
-  (invoke [this v]
-    (.add ^ArrayList *sink* v)))
+  (invoke [_ v]
+    (conj! *sink* v)))
 
-(defmacro flink-exec [steps-fn inputs]
+(defmacro flink-exec [steps-fn src-return-type src]
   `(let [fenv# (doto (StreamExecutionEnvironment/getExecutionEnvironment)
-                (.setParallelism 1))]
-     (-> fenv#
-         (.fromElements (object-array ~inputs))
-         ^DataStreamSource (~steps-fn)
-         (.addSink (DynSink.)))
-     (.execute fenv#)
-     (let [res# (into [] *sink*)]
-       (.clear ^ArrayList *sink*)
-       res#)))
+                 (.setParallelism 1))]
+     (with-redefs [*sink* (transient [])]
+       (-> fenv#
+           (.addSource ~src)
+           (.returns ~src-return-type)
+           ^DataStreamSource (~steps-fn)
+           (.addSink (DynSink.)))
+       (.execute fenv#)
+       (persistent! *sink*))))
 
-(defn capture-flatmap [flatmapper input]
-  (let [res (ArrayList.)]
-    (.flatMap flatmapper input (ListCollector. res))
+(defn capture-flatmap [^FlatMapFunction fmfn input]
+  (let [res (java.util.ArrayList.)]
+    (.flatMap fmfn input (ListCollector. res))
     res))
 
 (defprotocol ToVec
@@ -37,6 +44,10 @@
 
 (extend-protocol ToVec
   Tuple2
-  (to-vec [this]
+  (to-vec [^Tuple2 this]
     [(.f0 this) (.f1 this)]))
 
+(defn tuple [& vals]
+  (case (count vals)
+    2 (let [[a b] vals] (Tuple2. a b))
+    vals))
