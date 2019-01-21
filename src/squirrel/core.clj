@@ -57,7 +57,7 @@
     (with-require [squirrel.core]
       (let [[w1 c1] (to-vec t1)
             [w1 c2] (to-vec t2)]
-        (Tuple2. w1 (+ c1 c2))))))
+        (tuple w1 (+ c1 c2))))))
 
 (defn window-word-count [window-sec]
   (fn [^DataStreamSource stream]
