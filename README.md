@@ -12,8 +12,7 @@ lein test
 Build the Flink job:
 
 ```
-lein pom
-mvn clean package -DskipTests
+lein uberjar
 ```
 
 Start a local Flink cluster and a local netcat server:
@@ -26,7 +25,7 @@ nc -l -p 9000
 Run the Flink job:
 
 ```
-$FLINK_HOME/bin/flink run target/squirrel-standalone.jar 9000
+$FLINK_HOME/bin/flink run target/squirrel-0.1.0-standalone.jar 9000
 ```
 
 Check the results in Flink's logs:
