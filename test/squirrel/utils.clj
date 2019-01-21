@@ -8,15 +8,15 @@
    (org.apache.flink.streaming.api.functions.sink SinkFunction)
    (org.apache.flink.streaming.api.functions.source SourceFunction)))
 
-(deftype WaitingSource [wait-ms input-type inputs]
+(deftype WaitingSource [wait-ms output-type outputs]
   SourceFunction
   (run [_ ctx]
-    (doseq [i inputs]
-      (.collect ctx i))
+    (doseq [o outputs]
+      (.collect ctx o))
     (Thread/sleep wait-ms))
   ResultTypeQueryable
   (getProducedType [_]
-    input-type))
+    output-type))
 
 (def ^:dynamic *sink*)
 
