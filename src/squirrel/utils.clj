@@ -39,14 +39,6 @@
     (.flatMap fmfn input (ListCollector. res))
     res))
 
-(defprotocol ToVec
-  (to-vec [this]))
-
-(extend-protocol ToVec
-  Tuple2
-  (to-vec [^Tuple2 this]
-    [(.f0 this) (.f1 this)]))
-
 (defn tuple [& vals]
   (case (count vals)
     2 (let [[a b] vals] (Tuple2. a b))
