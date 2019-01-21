@@ -1,7 +1,7 @@
 # squirrel
 
 Flink window word count example in Clojure, reading text data from a local socket
-and printing counts every 5 seconds.
+and printing counts every 10 seconds.
 
 Run local tests:
 
@@ -28,8 +28,9 @@ Run the Flink job:
 $FLINK_HOME/bin/flink run target/squirrel-0.1.0-standalone.jar 9000
 ```
 
-Check the results in Flink's logs:
+
+Type some text in the netcat socket, check the results in Flink's logs:
 
 ```
-tail -f $FLINK_HOME/log/flink-*-taskmanager-*.out
+tail -f $FLINK_HOME/log/flink-*-taskexecutor-*.out
 ```

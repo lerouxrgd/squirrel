@@ -11,8 +11,7 @@
   (testing "SplitLine is correct"
     (is (= [["how" 1] ["are" 1] ["you" 1]]
            (->> (capture-flatmap (SplitLine.) "how are you")
-                (map to-vec)
-                (into [])))))
+                (map to-vec)))))
   (testing "CountWords is correct"
     (is (= ["yo" 3] 
            (->> (.reduce (CountWords.) (tuple "yo" 1) (tuple "yo" 2))
@@ -22,7 +21,7 @@
   (testing "Windowed word count"
     (is (= {"do" 3 "you" 1 "yes" 1 "i" 1}
            (->> ["do you do" "yes i do"]
-                (WaitingSource. 1200)
-                (flink-exec (window-word-count 1) "String")
+                (WaitingSource. 1200 (type-of String))
+                (flink-exec (window-word-count 1))
                 (map to-vec)
                 (into {}))))))

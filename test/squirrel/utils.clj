@@ -2,18 +2,21 @@
   (:import
    (org.apache.flink.api.common.functions FlatMapFunction)
    (org.apache.flink.api.common.functions.util ListCollector)
-   (org.apache.flink.api.java.tuple Tuple2)
+   (org.apache.flink.api.java.typeutils ResultTypeQueryable)
    (org.apache.flink.streaming.api.datastream DataStreamSource)
    (org.apache.flink.streaming.api.environment StreamExecutionEnvironment)
    (org.apache.flink.streaming.api.functions.sink SinkFunction)
    (org.apache.flink.streaming.api.functions.source SourceFunction)))
 
-(deftype WaitingSource [wait-ms inputs]
+(deftype WaitingSource [wait-ms input-type inputs]
   SourceFunction
   (run [_ ctx]
     (doseq [i inputs]
       (.collect ctx i))
-    (Thread/sleep wait-ms)))
+    (Thread/sleep wait-ms))
+  ResultTypeQueryable
+  (getProducedType [_]
+    input-type))
 
 (def ^:dynamic *sink*)
 
@@ -22,13 +25,12 @@
   (invoke [_ v]
     (conj! *sink* v)))
 
-(defmacro flink-exec [steps-fn src-return-type src]
+(defmacro flink-exec [steps-fn src]
   `(let [fenv# (doto (StreamExecutionEnvironment/getExecutionEnvironment)
                  (.setParallelism 1))]
      (with-redefs [*sink* (transient [])]
        (-> fenv#
            (.addSource ~src)
-           (.returns ~src-return-type)
            ^DataStreamSource (~steps-fn)
            (.addSink (DynSink.)))
        (.execute fenv#)
@@ -37,9 +39,4 @@
 (defn capture-flatmap [^FlatMapFunction fmfn input]
   (let [res (java.util.ArrayList.)]
     (.flatMap fmfn input (ListCollector. res))
-    res))
-
-(defn tuple [& vals]
-  (case (count vals)
-    2 (let [[a b] vals] (Tuple2. a b))
-    vals))
+    (into [] res)))
