@@ -21,13 +21,10 @@
   (to-vec [^Tuple2 this]
     [(.f0 this) (.f1 this)]))
 
-(defmacro with-require [namespaces & body]
-  `(let [init# (volatile! false)]
-     (when-not @init#
-       ~@(for [ns namespaces]
-           `(require '~ns))
-       (vreset! init# true))
-     ~@body))
+(defmacro require-once [& namespaces]
+  `(do ~@(for [ns namespaces]
+          (let [x# (gensym)]
+            `(defonce x# (require '~ns))))))
 
 (defmacro type-of [type]
   `(TypeInformation/of ~type))
@@ -54,10 +51,10 @@
 (deftype CountWords []
   ReduceFunction
   (reduce [_ t1 t2]
-    (with-require [squirrel.core]
-      (let [[w1 c1] (to-vec t1)
-            [w1 c2] (to-vec t2)]
-        (tuple w1 (+ c1 c2))))))
+    (require-once squirrel.core)
+    (let [[w1 c1] (to-vec t1)
+          [w1 c2] (to-vec t2)]
+      (tuple w1 (+ c1 c2)))))
 
 (defn window-word-count [window-sec]
   (fn [^DataStreamSource stream]

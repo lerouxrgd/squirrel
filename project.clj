@@ -8,7 +8,7 @@
   :profiles
   {:provided
    {:dependencies
-    [[org.apache.flink/flink-streaming-java_2.11 "1.7.1"]]}
+    [[org.apache.flink/flink-streaming-java_2.11 "1.8.0"]]}
    :repl
    {:repl-options {:init-ns squirrel.core}
     :aot [squirrel.utils]}
