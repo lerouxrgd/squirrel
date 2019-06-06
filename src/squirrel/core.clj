@@ -23,8 +23,8 @@
 
 (defmacro require-once [& namespaces]
   `(do ~@(for [ns namespaces]
-          (let [x# (gensym)]
-            `(defonce x# (require '~ns))))))
+           (let [x# (gensym)]
+             `(defonce x# (require '~ns))))))
 
 (defmacro type-of [type]
   `(TypeInformation/of ~type))
